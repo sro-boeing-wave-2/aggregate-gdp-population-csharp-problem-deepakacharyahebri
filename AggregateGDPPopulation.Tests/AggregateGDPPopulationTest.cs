@@ -12,35 +12,48 @@ namespace AggregateGDPPopulation.Tests
         public void CheckForTheExistenceOfFile()
         {
             AggregateGDP gdp = new AggregateGDP();
+            bool actual;
             gdp.CalculateAggregateGdp();
-            bool actual = File.Exists("../../../../AggregateGDPPopulation/output/output.json");
+            try
+            {
+                using (StreamReader s = new StreamReader("../../../../AggregateGDPPopulation/output/output.json"))
+                {
+                    actual = true;
+                }
+            }
+            catch(Exception e)
+            {
+                actual = false;
+            }
             bool expected = true;
             Assert.Equal(expected, actual);
         }*/
         [Fact]
-        public void CheckForFileContents()
+        public async void CheckForFileContents()
         {
             AggregateGDP gdp = new AggregateGDP();
             gdp.CalculateAggregateGdp();
-            StreamReader FileContentsByLine = new StreamReader("../../../../AggregateGDPPopulation/output/output.json");
-            StreamReader ActualFileContents = new StreamReader("../../../expected-output.json");
-            string actual = FileContentsByLine.ReadToEnd();
+            string actual;
             string expected = String.Empty;
-            while (true)
+            using (StreamReader FileContentsByLine = new StreamReader("../../../../AggregateGDPPopulation/output/output.json"))
             {
-                try
+                actual = await FileContentsByLine.ReadToEndAsync();
+            }
+            using(StreamReader ActualFileContents = new StreamReader("../../../expected-output.json"))
+            {
+                while (true)
                 {
-                    string content = ActualFileContents.ReadLine().Trim();
-                    expected += content;
-                }
-                catch (Exception e)
-                {
-                    break;
+                    try
+                    {
+                        string content = await ActualFileContents.ReadLineAsync();
+                        expected += content.Trim();
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
                 }
             }
-            //bool actualContents = (expected == actual);
-            //Console.WriteLine(actualContents);
-            //bool expectedContents = true;
             Assert.Equal(expected, actual);
         }
     }

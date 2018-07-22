@@ -15,12 +15,51 @@ namespace AggregateGDPPopulation
     }
     public class AggregateGDP
     {
+        public List<string> FileContents { get; set; }
+        public string JSONMap { get; set; }
+
+        public async Task<List<string>> ReadFileContents(string path)
+        {
+            try
+            {
+                StreamReader FileContents = new StreamReader(path);
+                List<string> ContentsByLine = new List<string>();
+                string s;
+                while ((s = await FileContents.ReadLineAsync()) != null)
+                {
+                    ContentsByLine.Add(s);
+                }
+                return ContentsByLine;
+            }
+            catch (Exception) { return new List<string>(); }
+        }
+        public async Task<string> ReadMapFile(string path)
+        {
+            StreamReader FileContents = new StreamReader(path);
+            string s = await FileContents.ReadToEndAsync();
+            return s;
+        }
+        public async void ReadMapAndCSVFile(string CSVPath, string CountryContinentMapPath)
+        {
+            Task<List<string>> FileContentsTask = ReadFileContents(CSVPath);
+            Task<string> JSONMapTask = ReadMapFile(CountryContinentMapPath);
+            FileContents = await FileContentsTask;
+            JSONMap = await JSONMapTask;
+        }
+        public async void WriteToJSONFile(string FilePath, string Content)
+        {
+            using (StreamWriter FileContents = new StreamWriter(FilePath))
+            {
+                await FileContents.WriteAsync(Content);
+            }                
+        }
         public void CalculateAggregateGdp()
         {
-            List<string> FileContents = File.ReadLines(@"../../../../AggregateGDPPopulation/data/datafile.csv").ToList();
-            StreamReader JSONFileContents = new StreamReader(@"../../../../AggregateGDPPopulation/data/country-continent-map.json");
-            var json = JSONFileContents.ReadToEnd();
-            var CountryContinentMap = JObject.Parse(json);
+            //List<string> FileContents = File.ReadLines(@"../../../../AggregateGDPPopulation/data/datafile.csv").ToList();
+            //StreamReader JSONFileContents = new StreamReader(@"../../../../AggregateGDPPopulation/data/country-continent-map.json");
+            //var JSONMap = JSONFileContents.ReadToEnd();
+            ReadMapAndCSVFile("../../../../AggregateGDPPopulation/data/datafile.csv", "../../../../AggregateGDPPopulation/data/country-continent-map.json");
+            var CountryContinentMap = JObject.Parse(JSONMap);
             /* https://social.msdn.microsoft.com/Forums/en-US/525ff8f2-13f5-4602-bce3-78b909cadedb/how-to-read-and-write-a-json-file-in-c?forum=csharpgeneral 
              * https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_Linq_JObject.htm 
              * */
@@ -44,17 +83,17 @@ namespace AggregateGDPPopulation
                         JSONObject[Continent].GDP_2012 += Gdp;
                         JSONObject[Continent].POPULATION_2012 += Population;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         GDPPopulation g = new GDPPopulation() { GDP_2012 = Gdp, POPULATION_2012 = Population };
                         JSONObject.Add(Continent, g);
                     }
                 }
-                catch (Exception e) { }
+                catch (Exception) { }
             }
             var JSONOutput = Newtonsoft.Json.JsonConvert.SerializeObject(JSONObject);
-            Console.WriteLine(Environment.CurrentDirectory);
-            File.WriteAllText("../../../../AggregateGDPPopulation/output/output.json", JSONOutput);
+            WriteToJSONFile("../../../../AggregateGDPPopulation/output/output.json", JSONOutput);
+            //File.WriteAllText("../../../../AggregateGDPPopulation/output/output.json", JSONOutput);
             //StreamWriter WriteToJSONFile = new StreamWriter("../../../../AggregateGDPPopulation/output/output.json");
             //WriteToJSONFile.WriteLine(JSONOutput);
         }
