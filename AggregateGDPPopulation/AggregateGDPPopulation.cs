@@ -15,9 +15,6 @@ namespace AggregateGDPPopulation
     }
     public class AggregateGDP
     {
-        public List<string> FileContents { get; set; }
-        public string JSONMap { get; set; }
-
         public async Task<List<string>> ReadFileContents(string path)
         {
             try
@@ -39,13 +36,13 @@ namespace AggregateGDPPopulation
             string s = await FileContents.ReadToEndAsync();
             return s;
         }
-        public async void ReadMapAndCSVFile(string CSVPath, string CountryContinentMapPath)
+        /*public async void ReadMapAndCSVFile(string CSVPath, string CountryContinentMapPath)
         {
             Task<List<string>> FileContentsTask = ReadFileContents(CSVPath);
             Task<string> JSONMapTask = ReadMapFile(CountryContinentMapPath);
             FileContents = await FileContentsTask;
             JSONMap = await JSONMapTask;
-        }
+        }*/
         public async void WriteToJSONFile(string FilePath, string Content)
         {
             using (StreamWriter FileContents = new StreamWriter(FilePath))
@@ -53,13 +50,17 @@ namespace AggregateGDPPopulation
                 await FileContents.WriteAsync(Content);
             }                
         }
-        public void CalculateAggregateGdp()
+        public async void CalculateAggregateGdp()
         {
             //List<string> FileContents = File.ReadLines(@"../../../../AggregateGDPPopulation/data/datafile.csv").ToList();
             //StreamReader JSONFileContents = new StreamReader(@"../../../../AggregateGDPPopulation/data/country-continent-map.json");
             //var JSONMap = JSONFileContents.ReadToEnd();
-            ReadMapAndCSVFile("../../../../AggregateGDPPopulation/data/datafile.csv", "../../../../AggregateGDPPopulation/data/country-continent-map.json");
-            var CountryContinentMap = JObject.Parse(JSONMap);
+            //ReadMapAndCSVFile("../../../../AggregateGDPPopulation/data/datafile.csv", "../../../../AggregateGDPPopulation/data/country-continent-map.json");
+            string CSVPath = "../../../../AggregateGDPPopulation/data/datafile.csv";
+            string CountryContinentMapPath = "../../../../AggregateGDPPopulation/data/country-continent-map.json";
+            Task<List<string>> FileContentsTask = ReadFileContents(CSVPath);
+            Task<string> JSONMapTask = ReadMapFile(CountryContinentMapPath);
+            List<string> FileContents = await FileContentsTask;
             /* https://social.msdn.microsoft.com/Forums/en-US/525ff8f2-13f5-4602-bce3-78b909cadedb/how-to-read-and-write-a-json-file-in-c?forum=csharpgeneral 
              * https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_Linq_JObject.htm 
              * */
@@ -69,6 +70,8 @@ namespace AggregateGDPPopulation
             int IndexOfPopulation = headers.IndexOf("\"Population (Millions) 2012\"");
             int IndexOfGDP = headers.IndexOf("\"GDP Billions (USD) 2012\"");
             Dictionary<string, GDPPopulation> JSONObject = new Dictionary<string, GDPPopulation>();
+            string CountryContinentJSONFileContents = await JSONMapTask;
+            var CountryContinentMap = JObject.Parse(CountryContinentJSONFileContents);
             for (int i = 1; i < FileContents.Count; i++)
             {
                 List<string> RowOfData = FileContents[i].Split(',').ToList();
