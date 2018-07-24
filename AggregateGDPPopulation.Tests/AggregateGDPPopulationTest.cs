@@ -31,8 +31,8 @@ namespace AggregateGDPPopulation.Tests
         [Fact]
         public async void CheckForFileContents()
         {
-            AggregateGDP gdp = new AggregateGDP();
-            gdp.CalculateAggregateGdp();
+            CalculateAggregateGdpPopulation gdp = new CalculateAggregateGdpPopulation();
+            gdp.CalculateAggregate();
             string actual;
             string expected = String.Empty;
             using (StreamReader FileContentsByLine = new StreamReader("../../../../AggregateGDPPopulation/output/output.json"))
