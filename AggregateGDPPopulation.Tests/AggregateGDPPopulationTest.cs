@@ -35,7 +35,7 @@ namespace AggregateGDPPopulation.Tests
         {
             CalculateAggregateGdpPopulation gdp = new CalculateAggregateGdpPopulation();
             JObject actual = await gdp.CalculateAggregate();
-            string ExpectedOutput = await FileUtilities.ReadFileToEndAsync(gdp.OutputPath);
+            string ExpectedOutput = await FileUtilities.ReadFileToEndAsync("../../../expected-output.json");
             JObject expected = JSONSerializers.DeSerializeString(ExpectedOutput);
             Assert.Equal(expected, actual);
         }

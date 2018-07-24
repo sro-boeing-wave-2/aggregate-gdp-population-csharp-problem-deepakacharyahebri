@@ -106,7 +106,6 @@ namespace AggregateGDPPopulation
         public string CountryContinentMapPath;
         public string OutputPath;
         public AggregateGDPPopulation AggregatedData;
-        public JObject AggregatedJSON;
         public CalculateAggregateGdpPopulation()//string CSVPath, string CountryContinentMapPath)
         {
             this.CSVPath = "../../../../AggregateGDPPopulation/data/datafile.csv";
@@ -141,135 +140,9 @@ namespace AggregateGDPPopulation
                 catch (Exception) { }
             }
             var JSONOutput = JSONSerializers.SerializeJObject(AggregatedData.AggregatedValues);
-            AggregatedJSON = JObject.Parse(JSONOutput);
+            var AggregatedJSON = JSONSerializers.DeSerializeString(JSONOutput);
             FileUtilities.WritingToFileAsync(OutputPath, JSONOutput);
             return AggregatedJSON;
         }
-        public JObject GetAggregatedJSON()
-        {
-            return this.AggregatedJSON;
-        }
     }
-    /*public class AggregateGDP
-    {
-        public float GDP_2012 { get; set; }
-        public float POPULATION_2012 { get; set; }
-        public string JSONCountryCountinentMapPath;
-        public string CSVDataPath;
-        //public Dictionary<string, float> GdpPopulationMap;
-        public Dictionary<string,Dictionary<string,float>> AggregateGdpPopulationMap;
-
-        public AggregateGDP(string JSONCountryCountinentMapPath, string CSVDataPath)
-        {
-            AggregateGdpPopulationMap = new Dictionary<string, Dictionary<string, float>>();
-            //CreateCountryContinentMap(JSONCountryCountinentMapPath); 
-        }
-
-        public void AddOrUpdateAggregateMap(string Continent, string Gdp, string Population)
-        {
-            float GdpParsedToFloat;
-            float PopulationParsedToFloat;
-            try
-            {
-                GdpParsedToFloat= float.Parse(Gdp);
-            }
-            catch (Exception)
-            {
-                GdpParsedToFloat = float.Parse(Gdp.Trim('\"'));
-            }
-            try
-            {
-                PopulationParsedToFloat = float.Parse(Population);
-            }
-            catch (Exception)
-            {
-                PopulationParsedToFloat = float.Parse(Population.Trim('\"'));
-            }
-        }
-        public async Task<List<string>> ReadFileContents(string path)
-        {
-            try
-            {
-                StreamReader FileContents = new StreamReader(path);
-                List<string> ContentsByLine = new List<string>();
-                string s;
-                while ((s = await FileContents.ReadLineAsync()) != null)
-                {
-                    ContentsByLine.Add(s);
-                }
-                return ContentsByLine;
-            }
-            catch (Exception) { return new List<string>(); }
-        }
-        public async Task<string> ReadMapFile(string path)
-        {
-            StreamReader FileContents = new StreamReader(path);
-            string s = await FileContents.ReadToEndAsync();
-            return s;
-        }*/
-        /*public async void ReadMapAndCSVFile(string CSVPath, string CountryContinentMapPath)
-        {
-            Task<List<string>> FileContentsTask = ReadFileContents(CSVPath);
-            Task<string> JSONMapTask = ReadMapFile(CountryContinentMapPath);
-            FileContents = await FileContentsTask;
-            JSONMap = await JSONMapTask;
-        }*/
-        /*public async void WriteToJSONFile(string FilePath, string Content)
-        {
-            using (StreamWriter FileContents = new StreamWriter(FilePath))
-            {
-                await FileContents.WriteAsync(Content);
-            }                
-        }
-        public async void CalculateAggregateGdp()
-        {
-            //List<string> FileContents = File.ReadLines(@"../../../../AggregateGDPPopulation/data/datafile.csv").ToList();
-            //StreamReader JSONFileContents = new StreamReader(@"../../../../AggregateGDPPopulation/data/country-continent-map.json");
-            //var JSONMap = JSONFileContents.ReadToEnd();
-            //ReadMapAndCSVFile("../../../../AggregateGDPPopulation/data/datafile.csv", "../../../../AggregateGDPPopulation/data/country-continent-map.json");
-            string CSVPath = "../../../../AggregateGDPPopulation/data/datafile.csv";
-            string CountryContinentMapPath = "../../../../AggregateGDPPopulation/data/country-continent-map.json";
-            Task<List<string>> FileContentsTask = ReadFileContents(CSVPath);
-            Task<string> JSONMapTask = ReadMapFile(CountryContinentMapPath);
-            List<string> FileContents = await FileContentsTask;*/
-            /* https://social.msdn.microsoft.com/Forums/en-US/525ff8f2-13f5-4602-bce3-78b909cadedb/how-to-read-and-write-a-json-file-in-c?forum=csharpgeneral 
-             * https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_Linq_JObject.htm 
-             * */
-            /*string headerText = FileContents[0];
-            List<string> headers = headerText.Split(',').ToList();
-            int IndexOfCountry = headers.IndexOf("\"Country Name\"");
-            int IndexOfPopulation = headers.IndexOf("\"Population (Millions) 2012\"");
-            int IndexOfGDP = headers.IndexOf("\"GDP Billions (USD) 2012\"");
-            Dictionary<string, GDPPopulation> JSONObject = new Dictionary<string, GDPPopulation>();
-            string CountryContinentJSONFileContents = await JSONMapTask;
-            var CountryContinentMap = JObject.Parse(CountryContinentJSONFileContents);
-            for (int i = 1; i < FileContents.Count; i++)
-            {
-                List<string> RowOfData = FileContents[i].Split(',').ToList();
-                string Country = RowOfData[IndexOfCountry].Trim('\"');
-                float Population = float.Parse(RowOfData[IndexOfPopulation].Trim('\"'));
-                float Gdp = float.Parse(RowOfData[IndexOfGDP].Trim('\"'));
-                try
-                {
-                    string Continent = CountryContinentMap.GetValue(RowOfData[IndexOfCountry].Trim('\"')).ToString();
-                    try
-                    {
-                        JSONObject[Continent].GDP_2012 += Gdp;
-                        JSONObject[Continent].POPULATION_2012 += Population;
-                    }
-                    catch (Exception)
-                    {
-                        GDPPopulation g = new GDPPopulation() { GDP_2012 = Gdp, POPULATION_2012 = Population };
-                        JSONObject.Add(Continent, g);
-                    }
-                }
-                catch (Exception) { }
-            }
-            var JSONOutput = Newtonsoft.Json.JsonConvert.SerializeObject(JSONObject);
-            WriteToJSONFile("../../../../AggregateGDPPopulation/output/output.json", JSONOutput);
-            //File.WriteAllText("../../../../AggregateGDPPopulation/output/output.json", JSONOutput);
-            //StreamWriter WriteToJSONFile = new StreamWriter("../../../../AggregateGDPPopulation/output/output.json");
-            //WriteToJSONFile.WriteLine(JSONOutput);
-        }
-    }*/
 }
