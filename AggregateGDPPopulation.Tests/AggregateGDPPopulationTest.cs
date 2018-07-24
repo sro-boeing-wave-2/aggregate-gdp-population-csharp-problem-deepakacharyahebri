@@ -3,6 +3,8 @@ using System.IO;
 using Xunit;
 using System.Linq;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace AggregateGDPPopulation.Tests
 {
@@ -32,28 +34,9 @@ namespace AggregateGDPPopulation.Tests
         public async void CheckForFileContents()
         {
             CalculateAggregateGdpPopulation gdp = new CalculateAggregateGdpPopulation();
-            gdp.CalculateAggregate();
-            string actual;
-            string expected = String.Empty;
-            using (StreamReader FileContentsByLine = new StreamReader("../../../../AggregateGDPPopulation/output/output.json"))
-            {
-                actual = await FileContentsByLine.ReadToEndAsync();
-            }
-            using(StreamReader ActualFileContents = new StreamReader("../../../expected-output.json"))
-            {
-                while (true)
-                {
-                    try
-                    {
-                        string content = await ActualFileContents.ReadLineAsync();
-                        expected += content.Trim();
-                    }
-                    catch (Exception)
-                    {
-                        break;
-                    }
-                }
-            }
+            JObject actual = await gdp.CalculateAggregate();
+            string ExpectedOutput = await FileUtilities.ReadFileToEndAsync(gdp.OutputPath);
+            JObject expected = JSONSerializers.DeSerializeString(ExpectedOutput);
             Assert.Equal(expected, actual);
         }
     }

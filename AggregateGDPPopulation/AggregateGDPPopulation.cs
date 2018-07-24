@@ -97,21 +97,25 @@ namespace AggregateGDPPopulation
         }
         public static string SerializeJObject(Dictionary<string, GDPPopulation> JSONObject)
         {
-            return JsonConvert.SerializeObject(JSONObject);
+            return JsonConvert.SerializeObject(JSONObject, Formatting.Indented);
         }
     }
     public class CalculateAggregateGdpPopulation
     {
         public string CSVPath;
         public string CountryContinentMapPath;
+        public string OutputPath;
         public AggregateGDPPopulation AggregatedData;
+        public JObject AggregatedJSON;
         public CalculateAggregateGdpPopulation()//string CSVPath, string CountryContinentMapPath)
         {
             this.CSVPath = "../../../../AggregateGDPPopulation/data/datafile.csv";
             this.CountryContinentMapPath = "../../../../AggregateGDPPopulation/data/country-continent-map.json";
+            this.OutputPath = "../../../../AggregateGDPPopulation/output/output.json";
             AggregatedData = new AggregateGDPPopulation();
+            //AggregatedJSON = new JObject();
         }
-        public async void CalculateAggregate()
+        public async Task<JObject> CalculateAggregate()
         {
             Task<List<string>> FileContentsTask = FileUtilities.ReadFileContentsByLineAsync(CSVPath);
             Task<string> JSONMapTask = FileUtilities.ReadFileToEndAsync(CountryContinentMapPath);
@@ -137,7 +141,13 @@ namespace AggregateGDPPopulation
                 catch (Exception) { }
             }
             var JSONOutput = JSONSerializers.SerializeJObject(AggregatedData.AggregatedValues);
-            FileUtilities.WritingToFileAsync("../../../../AggregateGDPPopulation/output/output.json", JSONOutput);
+            AggregatedJSON = JObject.Parse(JSONOutput);
+            FileUtilities.WritingToFileAsync(OutputPath, JSONOutput);
+            return AggregatedJSON;
+        }
+        public JObject GetAggregatedJSON()
+        {
+            return this.AggregatedJSON;
         }
     }
     /*public class AggregateGDP
